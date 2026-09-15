@@ -1,0 +1,42 @@
+.page {
+  min-height: 100vh;
+  padding: var(--spacing-xl);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-xl);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.greeting {
+  color: var(--color-text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.gameName {
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.badge {
+  display: inline-block;
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
