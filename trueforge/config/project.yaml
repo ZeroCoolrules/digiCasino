@@ -1,0 +1,60 @@
+project:
+  name: digiCasino
+  type: demo-virtual-credit-casino
+  orchestration_model: TrueForge
+
+repo:
+  default_branch: main
+  dev_branch: feat/digicasino-foundation
+  remote: https://github.com/ZeroCoolrules/digiCasino.git
+
+stack:
+  workspace: npm-workspaces
+  apps:
+    api:
+      language: typescript
+      framework: express
+      test: [vitest, supertest]
+    web:
+      language: typescript
+      framework: react-vite
+      test: [vitest, react-testing-library]
+  packages:
+    shared: types-and-constants
+  database:
+    orm: prisma
+    dev_provider: sqlite
+    production_target: postgresql
+  auth:
+    strategy: jwt
+    password_hashing: bcrypt
+
+roles:
+  - orchestrator
+  - architect
+  - frontend
+  - backend
+  - game-engine
+  - wallet-ledger
+  - admin-operations
+  - security-compliance
+  - qa-devops
+
+task_sequencing:
+  - id: "001"
+    title: Foundation
+    priority: P0
+    owners: [architect, backend, frontend, qa-devops]
+  - id: "002"
+    title: Demo Casino Vertical Slice
+    priority: P1
+    owners: [architect, backend, game-engine, wallet-ledger, frontend, qa-devops, orchestrator]
+  - id: "003"
+    title: Admin + Casino Operations
+    priority: P1
+    owners: [admin-operations, backend, qa-devops]
+
+cost_control:
+  guidance_doc: trueforge/README.md
+  parallelize_only_independent_tasks: true
+  max_agents_per_file_at_once: 1
