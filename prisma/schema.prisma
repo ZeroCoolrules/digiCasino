@@ -1,0 +1,68 @@
+// digiCasino — Prisma schema (Task 001: Foundation)
+// SQLite for local/dev. DATABASE_URL is read from the environment (see .env.example).
+// NOTE: Pinned to Prisma ORM 6.x (classic schema-based datasource config) rather than 7.x,
+// which requires a prisma.config.ts + mandatory driver adapters. That added complexity is not
+// justified for this foundation-stage demo app. See apps/api/README.md for details.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  wallet       Wallet?
+  gameSessions GameSession[]
+}
+
+// The Wallet module is the only part of the system allowed to create/mutate Wallet and
+// LedgerEntry rows (see AGENTS.md / SYSTEM_ARCHITECTURE.md). balance is kept in sync with the
+// append-only ledger by the wallet service layer.
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(1000)
+  currency  String   @default("DEMO")
+  createdAt DateTime @default(now())
+
+  user          User          @relation(fields: [userId], references: [id])
+  ledgerEntries LedgerEntry[]
+}
+
+enum LedgerEntryType {
+  CREDIT
+  DEBIT
+}
+
+// Append-only. Rows are never updated or deleted; balance corrections happen by inserting new
+// entries, not by mutating existing ones.
+model LedgerEntry {
+  id        String          @id @default(cuid())
+  walletId  String
+  type      LedgerEntryType
+  amount    Int
+  reason    String
+  createdAt DateTime        @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+}
+
+// Schema stub only for Task 001 — no game logic is implemented against this model yet.
+// Task 002 (Demo Casino Vertical Slice) will populate and extend it.
+model GameSession {
+  id        String   @id @default(cuid())
+  userId    String
+  gameId    String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

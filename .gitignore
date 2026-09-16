@@ -8,3 +8,5 @@ build/
 .DS_Store
 *.sqlite
 *.sqlite-journal
+*.db
+*.db-journal
