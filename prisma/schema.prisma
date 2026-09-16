@@ -55,14 +55,34 @@ model LedgerEntry {
   wallet Wallet @relation(fields: [walletId], references: [id])
 }
 
-// Schema stub only for Task 001 — no game logic is implemented against this model yet.
-// Task 002 (Demo Casino Vertical Slice) will populate and extend it.
+// Game catalog (Task 002). One row per playable demo game.
+model Game {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  minBet      Int
+  maxBet      Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  sessions GameSession[]
+}
+
+// A single play of a game. Settlement (bet debit + payout credit) happens through the wallet
+// module only — see apps/api/src/modules/wallet. `result` is a JSON string describing exactly
+// what the server-side RNG produced, kept for auditability.
 model GameSession {
-  id        String   @id @default(cuid())
-  userId    String
-  gameId    String
-  status    String   @default("PENDING")
-  createdAt DateTime @default(now())
+  id         String    @id @default(cuid())
+  userId     String
+  gameId     String
+  status     String    @default("PENDING") // PENDING -> COMPLETED
+  bet        Int
+  payout     Int? // null until settled
+  result     String? // JSON string, null until settled
+  createdAt  DateTime  @default(now())
+  settledAt  DateTime?
 
   user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
 }

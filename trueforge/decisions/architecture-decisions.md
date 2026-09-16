@@ -75,3 +75,45 @@ changes.
   any non-trivial chunk of work, not just at final PR time.
 - `trueforge/workflows/release-feature.md` explicitly pushes to `origin` rather than assuming a
   remote may not exist.
+
+## ADR-004: Demo game choice, RNG, and settlement design for Task 002
+**Status**: Accepted
+**Date**: Task 002 — Demo Casino Vertical Slice
+
+### Context
+Task 002 requires one complete playable demo game with server-side outcomes and real wallet
+settlement, per `AGENTS.md`'s rule that game outcomes are never trusted from the client and all
+balance mutations go through the wallet module only.
+
+### Decision
+- **Game**: a 3-reel slot machine (`slug: demo-slots`), seeded into a new `Game` catalog table via
+  `prisma/seed.ts` (idempotent upsert by slug).
+- **RNG**: Node's built-in `crypto.randomInt` (CSPRNG) rolls each reel independently server-side;
+  the full outcome (reel symbols + payout multiplier) is stored as a JSON string on `GameSession.result`
+  for auditability. The client never supplies or influences the outcome.
+- **Settlement**: a session is created (`POST /games/:slug/sessions`) which validates the bet
+  against `Game.minBet`/`maxBet` and the wallet balance, then immediately debits the bet via the
+  wallet module. Playing the session (`POST /games/sessions/:id/play`) resolves the RNG outcome and
+  credits any payout, also via the wallet module, inside one Prisma transaction. The session's
+  `status` transitions `PENDING` → `COMPLETED` as part of that same transaction (conditioned on the
+  current status being `PENDING`), so a second `play` call on an already-settled session is
+  rejected (`409 SESSION_ALREADY_SETTLED`) rather than double-crediting/debiting.
+- **Wallet module extension**: generic `debit()`/`credit()` functions were added to the existing
+  wallet service (alongside the Task 001 `createWalletForUser`), all still writing through the same
+  append-only `LedgerEntry` table — no other module gained direct write access to `Wallet`/
+  `LedgerEntry`.
+
+### Alternatives considered
+- **Card-based game (blackjack) or a number-guessing game**: rejected for the first vertical slice
+  as needlessly more complex (multi-step player decisions) than needed to validate the full
+  login→play→ledger loop; a slot machine is a single-decision (bet amount) game that still reads as
+  a real casino game.
+- **Deterministic/seeded PRNG exposed to the client for "provably fair" verification**: deferred to
+  a future P2/P3 backlog item; out of scope for the foundation vertical slice.
+
+### Consequences
+- Extending to additional games later mainly means adding new `Game` rows plus a new game-specific
+  resolver, without changing the settlement/session-lifecycle contract.
+- The wallet module's `debit`/`credit` functions are now the reusable building blocks Task 003's
+  admin-initiated credit adjustments should also call, rather than introducing a second mutation
+  path.
