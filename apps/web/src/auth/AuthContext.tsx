@@ -7,12 +7,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { apiClient, type AuthUser } from '../api/client';
+import { apiClient, type AuthUser, type Wallet } from '../api/client';
 
 const TOKEN_STORAGE_KEY = 'digicasino.authToken';
 
 export interface AuthContextValue {
   user: AuthUser | null;
+  wallet: Wallet | null;
   token: string | null;
   /** True while the initial /auth/me check on load is in flight. */
   isLoading: boolean;
@@ -46,6 +47,7 @@ function storeToken(token: string | null) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => readStoredToken());
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [wallet, setWallet] = useState<Wallet | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(() => Boolean(readStoredToken()));
 
   useEffect(() => {
@@ -59,15 +61,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     apiClient
       .me(token)
-      .then((fetchedUser) => {
+      .then((result) => {
         if (!cancelled) {
-          setUser(fetchedUser);
+          setUser(result.user);
+          setWallet(result.wallet);
         }
       })
       .catch(() => {
         if (!cancelled) {
           // Token is invalid/expired — clear local auth state.
           setUser(null);
+          setWallet(null);
           setToken(null);
           storeToken(null);
         }
@@ -86,28 +90,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const login = useCallback(async (email: string, password: string) => {
+    // POST /auth/login returns { token, user } but not the wallet balance,
+    // so fetch /auth/me right after to hydrate wallet state too.
     const result = await apiClient.login({ email, password });
+    const me = await apiClient.me(result.token);
     setToken(result.token);
-    setUser(result.user);
+    setUser(me.user);
+    setWallet(me.wallet);
     storeToken(result.token);
   }, []);
 
   const register = useCallback(async (email: string, password: string) => {
-    const result = await apiClient.register({ email, password });
-    setToken(result.token);
-    setUser(result.user);
-    storeToken(result.token);
+    // POST /auth/register creates the user + starting wallet but does NOT
+    // issue a token (by backend design) -- log in immediately afterwards
+    // with the same credentials so registration still feels like one step.
+    const { user: registeredUser, wallet: startingWallet } = await apiClient.register({
+      email,
+      password,
+    });
+    const loginResult = await apiClient.login({ email, password });
+    setToken(loginResult.token);
+    setUser(registeredUser);
+    setWallet(startingWallet);
+    storeToken(loginResult.token);
   }, []);
 
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
+    setWallet(null);
     storeToken(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, token, isLoading, login, register, logout }),
-    [user, token, isLoading, login, register, logout],
+    () => ({ user, wallet, token, isLoading, login, register, logout }),
+    [user, wallet, token, isLoading, login, register, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

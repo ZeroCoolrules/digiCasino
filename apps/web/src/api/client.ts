@@ -46,9 +46,30 @@ export interface AuthUser {
   createdAt: string;
 }
 
+/** The player's demo wallet, as returned by /auth/me and /auth/register. */
+export interface Wallet {
+  balance: number;
+  currency: string;
+}
+
 export interface AuthResponse {
   token: string;
   user: AuthUser;
+}
+
+/**
+ * /auth/register does NOT issue a token (by backend design, see
+ * apps/api/README.md) -- it creates the user + their starting wallet, and
+ * the caller is expected to log in afterwards to obtain a token.
+ */
+export interface RegisterResponse {
+  user: AuthUser;
+  wallet: Wallet;
+}
+
+export interface MeResponse {
+  user: AuthUser;
+  wallet: Wallet;
 }
 
 export interface RegisterPayload {
@@ -95,8 +116,8 @@ async function request<T>(
   return body as T;
 }
 
-export function register(payload: RegisterPayload): Promise<AuthResponse> {
-  return request<AuthResponse>('/auth/register', {
+export function register(payload: RegisterPayload): Promise<RegisterResponse> {
+  return request<RegisterResponse>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -109,8 +130,8 @@ export function login(payload: LoginPayload): Promise<AuthResponse> {
   });
 }
 
-export function me(token: string): Promise<AuthUser> {
-  return request<AuthUser>('/auth/me', { method: 'GET' }, token);
+export function me(token: string): Promise<MeResponse> {
+  return request<MeResponse>('/auth/me', { method: 'GET' }, token);
 }
 
 export const apiClient = {

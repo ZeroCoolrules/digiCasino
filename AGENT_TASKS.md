@@ -17,9 +17,10 @@ A task is never marked `COMPLETED` merely because code was written — see
 `trueforge/workflows/test-feature.md` and `trueforge/workflows/review-feature.md`.
 
 ## Current top-level status
-- **Task 001 — Foundation**: IN PROGRESS (this bootstrap). Owner sequence: Architect (orchestrator,
-  this pass) → Backend + Frontend (parallel child agents) → QA (orchestrator, post-merge).
-- **Task 002 — Demo Casino Vertical Slice**: BACKLOG (queued next).
+- **Task 001 — Foundation**: COMPLETED. Implemented by Architect (orchestrator) → Backend +
+  Frontend (parallel child agents) → Orchestrator (merge, API-contract reconciliation, QA). Full
+  test suite green (API 12/12, Web 11/11); lint and build clean for both workspaces.
+- **Task 002 — Demo Casino Vertical Slice**: READY (queued next).
 - **Task 003 — Admin + Casino Operations**: BACKLOG (queued after Task 002).
 
 ## Agent roles

@@ -19,8 +19,10 @@ Last updated: TrueForge bootstrap (Task 001 — Foundation)
 - **Environment variables**: none existed. `.env.example` is being added at the repo root.
 
 ## Current phase
-**Task 001 — Foundation** (P0). See `AGENT_TASKS.md` and `trueforge/tasks/backlog.md` for the full
-task registry and sequencing.
+**Task 001 — Foundation** (P0) is COMPLETED: the app runs locally (`npm install && npm test` at
+the repo root), users can register/log in, and the SQLite database is connected and migrated via
+Prisma. **Task 002 — Demo Casino Vertical Slice** is READY next. See `AGENT_TASKS.md` and
+`trueforge/tasks/backlog.md` for the full task registry and sequencing.
 
 ## Branching
 - `main` — stable branch, pushed to `origin` (github.com/ZeroCoolrules/digiCasino).

@@ -15,8 +15,10 @@ take precedence over the rest of the P0–P3 list below.
 - **Acceptance criteria**: the app runs locally, users can register/login, the database is
   connected.
 - **Test requirements**: Vitest (api + web) passing.
-- **Status**: IN PROGRESS (this bootstrap).
-- **Completion notes**: —
+- **Status**: COMPLETED (see `trueforge/tasks/completed.md`).
+- **Completion notes**: Implemented by backend-agent + frontend-agent child agents in parallel
+  worktrees, merged into `feat/digicasino-foundation`, contract mismatch reconciled, full test
+  suite green. See `trueforge/tasks/completed.md` for details.
 
 ## Task 002 — Demo Casino Vertical Slice
 - **Priority**: P1
@@ -31,7 +33,7 @@ take precedence over the rest of the P0–P3 list below.
   see the transaction history.
 - **Test requirements**: game session tests, wallet idempotency tests, frontend smoke test for the
   game screen.
-- **Status**: BACKLOG (queued next).
+- **Status**: READY (Task 001 dependency satisfied).
 - **Completion notes**: —
 
 ## Task 003 — Admin + Casino Operations
@@ -51,15 +53,15 @@ take precedence over the rest of the P0–P3 list below.
 ---
 
 ## Remaining P0 — Foundation (folded into Task 001, tracked individually for granularity)
-- Repository audit — IN PROGRESS (this bootstrap)
-- Architecture documentation — IN PROGRESS (this bootstrap)
-- Environment configuration — BACKLOG
-- Database setup — BACKLOG
-- Authentication foundation — BACKLOG
-- Core schema — BACKLOG
-- API conventions — BACKLOG
-- Shared UI system — BACKLOG
-- Testing setup — BACKLOG
+- Repository audit — COMPLETED
+- Architecture documentation — COMPLETED
+- Environment configuration — COMPLETED
+- Database setup — COMPLETED
+- Authentication foundation — COMPLETED
+- Core schema — COMPLETED
+- API conventions — COMPLETED
+- Shared UI system — COMPLETED
+- Testing setup — COMPLETED
 
 ## P1 — First Working Casino (superset of Task 002/003, remaining items)
 - Casino landing page
