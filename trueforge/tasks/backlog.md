@@ -33,8 +33,12 @@ take precedence over the rest of the P0–P3 list below.
   see the transaction history.
 - **Test requirements**: game session tests, wallet idempotency tests, frontend smoke test for the
   game screen.
-- **Status**: READY (Task 001 dependency satisfied).
-- **Completion notes**: —
+- **Status**: COMPLETED (see `trueforge/tasks/completed.md`).
+- **Completion notes**: Architect stage (schema/contract) done by orchestrator; backend and
+  frontend implemented directly by the orchestrator after the originally-assigned child agents
+  became unreachable (see completion notes for details). Merged into
+  `feat/task-002-vertical-slice`, full test suite green (40 tests), live end-to-end smoke test
+  passed against a real running server with real RNG.
 
 ## Task 003 — Admin + Casino Operations
 - **Priority**: P1
@@ -47,7 +51,7 @@ take precedence over the rest of the P0–P3 list below.
 - **Acceptance criteria**: the operator can manage the demo casino without editing the database
   manually.
 - **Test requirements**: admin-authorization tests, audit-log tests.
-- **Status**: BACKLOG (queued after Task 002).
+- **Status**: READY (Task 002 dependency satisfied).
 - **Completion notes**: —
 
 ---
@@ -64,16 +68,16 @@ take precedence over the rest of the P0–P3 list below.
 - Testing setup — COMPLETED
 
 ## P1 — First Working Casino (superset of Task 002/003, remaining items)
-- Casino landing page
-- Casino lobby
-- Game catalog
-- Player profile
-- Demo wallet
-- Transaction ledger
-- One playable demo game
-- Game session tracking
-- Transaction history
-- Basic admin dashboard
+- Casino landing page — COMPLETED (Task 001)
+- Casino lobby — COMPLETED (Task 002, DB-backed catalog)
+- Game catalog — COMPLETED (Task 002)
+- Player profile — BACKLOG (only auth/wallet exist so far, no dedicated profile page)
+- Demo wallet — COMPLETED (Task 001/002)
+- Transaction ledger — COMPLETED (Task 002)
+- One playable demo game — COMPLETED (Task 002, Demo Slots)
+- Game session tracking — COMPLETED (Task 002)
+- Transaction history — COMPLETED (Task 002)
+- Basic admin dashboard — BACKLOG (Task 003)
 
 ## P2 — Expansion
 - Additional demo games
