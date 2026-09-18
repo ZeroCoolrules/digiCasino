@@ -3,10 +3,19 @@ import { Landing } from './pages/Landing/Landing';
 import { Lobby } from './pages/Lobby/Lobby';
 import { Login } from './pages/Login/Login';
 import { Register } from './pages/Register/Register';
+import { Game } from './pages/Game/Game';
+import { Transactions } from './pages/Transactions/Transactions';
 import { RouterProvider, useRouter } from './router/Router';
+
+const GAME_ROUTE_PREFIX = '/games/';
 
 function Routes() {
   const { path } = useRouter();
+
+  if (path.startsWith(GAME_ROUTE_PREFIX)) {
+    const slug = path.slice(GAME_ROUTE_PREFIX.length);
+    return <Game slug={slug} />;
+  }
 
   switch (path) {
     case '/lobby':
@@ -15,6 +24,8 @@ function Routes() {
       return <Login />;
     case '/register':
       return <Register />;
+    case '/transactions':
+      return <Transactions />;
     case '/':
     default:
       return <Landing />;
