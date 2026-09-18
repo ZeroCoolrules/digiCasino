@@ -1,14 +1,51 @@
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../auth/AuthContext';
+import { apiClient, type Game } from '../../api/client';
 import { Button } from '../../components/Button/Button';
 import { Card } from '../../components/Card/Card';
-import { Link } from '../../router/Router';
+import { Link, useRouter } from '../../router/Router';
 import styles from './Lobby.module.css';
-
-// Static placeholder catalog — the real game catalog is built in Task 002/003.
-const COMING_SOON_GAMES = ['Demo Slots', 'Demo Blackjack', 'Demo Roulette', 'Demo Poker'];
 
 export function Lobby() {
   const { user, isLoading, logout } = useAuth();
+  const { navigate } = useRouter();
+  const [games, setGames] = useState<Game[]>([]);
+  const [gamesError, setGamesError] = useState<string | null>(null);
+  const [isLoadingGames, setIsLoadingGames] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    apiClient
+      .listGames()
+      .then((res) => {
+        if (!cancelled) {
+          setGames(res.games);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setGamesError(err instanceof Error ? err.message : 'Failed to load games.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingGames(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function handlePlay(slug: string) {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    navigate(`/games/${slug}`);
+  }
 
   return (
     <main className={styles.page}>
@@ -20,6 +57,9 @@ export function Lobby() {
           ) : user ? (
             <>
               <span className={styles.greeting}>Signed in as {user.email}</span>
+              <Link to="/transactions">
+                <Button variant="secondary">Transaction history</Button>
+              </Link>
               <Button variant="secondary" onClick={logout}>
                 Log out
               </Button>
@@ -35,14 +75,28 @@ export function Lobby() {
         </div>
       </header>
 
-      <section className={styles.grid}>
-        {COMING_SOON_GAMES.map((gameName) => (
-          <Card key={gameName}>
-            <h2 className={styles.gameName}>{gameName}</h2>
-            <span className={styles.badge}>Coming soon</span>
-          </Card>
-        ))}
-      </section>
+      {isLoadingGames ? (
+        <p>Loading games…</p>
+      ) : gamesError ? (
+        <p role="alert" className={styles.greeting}>
+          {gamesError}
+        </p>
+      ) : (
+        <section className={styles.grid}>
+          {games.map((game) => (
+            <Card key={game.slug}>
+              <h2 className={styles.gameName}>{game.name}</h2>
+              <p>{game.description}</p>
+              <p className={styles.badge}>
+                Bet {game.minBet}–{game.maxBet}
+              </p>
+              <Button variant="primary" onClick={() => handlePlay(game.slug)}>
+                {user ? 'Play' : 'Log in to play'}
+              </Button>
+            </Card>
+          ))}
+        </section>
+      )}
     </main>
   );
 }
