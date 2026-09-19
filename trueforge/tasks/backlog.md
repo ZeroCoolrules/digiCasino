@@ -51,10 +51,11 @@ take precedence over the rest of the P0–P3 list below.
 - **Acceptance criteria**: the operator can manage the demo casino without editing the database
   manually.
 - **Test requirements**: admin-authorization tests, audit-log tests.
-- **Status**: IN PROGRESS (Architect stage complete: role/audit-log schema, ADMIN_EMAILS
-  promotion, and the full API contract are fixed — see ADR-005; backend/frontend implementation
-  underway).
-- **Completion notes**: —
+- **Status**: COMPLETED (see `trueforge/tasks/completed.md`).
+- **Completion notes**: Architect stage (schema/contract) by the orchestrator; backend and
+  frontend each implemented by a dedicated child agent in parallel worktrees (both completed
+  successfully with no contract drift). Merged into `feat/task-003-admin-operations`, full test
+  suite green (60 tests), live end-to-end smoke test passed against a real running server.
 
 ---
 
@@ -79,7 +80,7 @@ take precedence over the rest of the P0–P3 list below.
 - One playable demo game — COMPLETED (Task 002, Demo Slots)
 - Game session tracking — COMPLETED (Task 002)
 - Transaction history — COMPLETED (Task 002)
-- Basic admin dashboard — BACKLOG (Task 003)
+- Basic admin dashboard — COMPLETED (Task 003)
 
 ## P2 — Expansion
 - Additional demo games

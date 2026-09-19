@@ -97,3 +97,56 @@ and see it reflected in their transaction history.
 - No "provably fair" client-side verification of RNG outcomes — deferred, per ADR-004.
 - Admin dashboard, responsible-gaming controls, and deployment automation remain out of scope
   (Task 003 / P2 / P3).
+
+## Task 003 — Admin + Casino Operations
+- **Completed**: this cycle.
+- **Owners**: Architect (orchestrator) → admin-backend-agent + admin-frontend-agent (parallel
+  child agents, both completed successfully) → Orchestrator (merge, verification).
+
+### Summary
+- **Schema**: `Role` enum (`PLAYER`|`ADMIN`) on `User`; append-only `AuditLogEntry` model
+  (adminUserId, action, targetUserId, amount, reason, createdAt). See ADR-005.
+- **Admin bootstrapping**: an `ADMIN_EMAILS` environment variable (comma-separated) auto-promotes
+  matching users to `ADMIN` on register/login — no hardcoded demo credentials, no direct database
+  edits ever required to create the first admin.
+- **Backend** (`apps/api/src/modules/admin/`): `requireAdmin` middleware (403 for non-admins, 401
+  for unauthenticated, composed after `requireAuth`); `admin.service.ts` for game management,
+  player listing, credit adjustments (via the existing wallet module's `debitWallet`/
+  `creditWallet`, never direct writes), audit-log queries, and operational reporting.
+  Routes: `GET/PATCH /admin/games(/:slug)`, `GET /admin/players`,
+  `POST /admin/players/:userId/credit-adjustments`, `GET /admin/audit-log`,
+  `GET /admin/reports/summary`.
+- **Frontend** (`apps/web/src/pages/Admin/`): an `AdminDashboard` page (guarded client-side by
+  `role === 'ADMIN'`, with the real enforcement server-side) composed of independently-loading
+  sections: `OperationalSummary`, `GameManagement` (toggle active/edit min-max bet),
+  `PlayerManagement` (list players, submit credit/debit adjustments), and `AuditLog` (read-only,
+  newest first). A "Admin dashboard" nav link appears in the Lobby header only for admin users.
+- **Orchestration note**: unlike Task 002, both child agents (`admin-backend-agent`,
+  `admin-frontend-agent`) completed their assignments successfully and reported back promptly with
+  no unreachability issues, and their branches merged with zero contract drift and zero merge
+  conflicts.
+
+### Test requirements — met
+- `npm test` at the repo root: **API 38/38 passing** (25 from Tasks 001/002 + 13 new admin tests),
+  **Web 22/22 passing** (15 from Tasks 001/002 + 7 new admin/lobby tests).
+- `npx tsc --noEmit` / `npm run lint` / `npm run build`: clean for both workspaces.
+- **Live end-to-end smoke test** against a real running server (not mocks): registered an
+  `ADMIN_EMAILS`-matching user (auto-promoted to ADMIN), registered a regular player; verified
+  403 for a non-admin and 401 for unauthenticated requests on an admin route; deactivated and
+  reactivated the demo game via the admin API and confirmed the public catalog reflected the
+  change immediately; credited a player 500 demo credits (balance updated correctly, audit entry
+  created); attempted an over-limit debit (correctly rejected with `400 INSUFFICIENT_BALANCE`,
+  no partial state change); confirmed the audit log and operational summary numbers were fully
+  internally consistent (ledger entry count, total credits in circulation, player count all
+  matched expectations).
+
+### Acceptance criteria — met
+An operator can manage the game catalog, view players, adjust demo credits with a full audit
+trail, and see basic operational metrics — all without ever touching the database directly.
+
+### Known limitations
+- Admin access is granted via the `ADMIN_EMAILS` environment variable with no invitation/approval
+  workflow — acceptable for this demo-stage project per ADR-005, but must be revisited before any
+  real-money functionality is considered.
+- No pagination on players/audit-log listings yet; acceptable at current data volumes.
+- Reporting is computed on-demand (no caching/materialization) — fine at current scale per ADR-005.

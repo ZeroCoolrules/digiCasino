@@ -24,9 +24,13 @@ A task is never marked `COMPLETED` merely because code was written — see
   orchestrator; backend and frontend implemented directly by the orchestrator after the assigned
   child agents became unreachable (see `trueforge/tasks/completed.md`). Full test suite green
   (API 25/25, Web 15/15); lint, build, and a live end-to-end smoke test all passed.
-- **Task 003 — Admin + Casino Operations**: IN PROGRESS. Architect stage complete (role/audit-log
-  schema, ADMIN_EMAILS admin promotion, full API contract fixed — see ADR-005); backend/frontend
-  implementation underway.
+- **Task 003 — Admin + Casino Operations**: COMPLETED. Architect stage (schema/contract) by the
+  orchestrator; backend and frontend each implemented by a dedicated child agent in parallel
+  (both completed successfully, no contract drift). Full test suite green (API 38/38, Web 22/22);
+  lint, build, and a live end-to-end smoke test all passed.
+
+All three vertical-slice tasks (001–003) are now complete. Remaining work is P1's leftover
+"Player profile" item plus the P2/P3 backlog in `trueforge/tasks/backlog.md`.
 
 ## Agent roles
 See `trueforge/agents/*.md` for the full definition of each role (mission, responsibilities, owned
