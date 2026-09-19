@@ -117,3 +117,49 @@ balance mutations go through the wallet module only.
 - The wallet module's `debit`/`credit` functions are now the reusable building blocks Task 003's
   admin-initiated credit adjustments should also call, rather than introducing a second mutation
   path.
+
+## ADR-005: Admin role and audit-log design for Task 003
+**Status**: Accepted
+**Date**: Task 003 — Admin + Casino Operations
+
+### Context
+Task 003 requires operator-facing admin functionality (game catalog management, player overview,
+audited demo-credit adjustments, basic reporting) without giving anyone direct database access, and
+without introducing real-money payment processing (explicitly out of scope per `AGENTS.md` /
+`PRODUCT_REQUIREMENTS.md`).
+
+### Decision
+- **Authorization**: a `role` enum (`PLAYER` | `ADMIN`, default `PLAYER`) was added directly to
+  `User` rather than a separate roles/permissions table — there are only two roles and no plans for
+  more granular permissions in this phase, so the simplest model that satisfies "server-side
+  enforcement" (per `trueforge/agents/admin-operations.md`) was chosen over premature generality.
+- **Admin bootstrapping**: rather than a hardcoded admin account (which would mean either a
+  committed demo password or a manual database edit — both against `AGENTS.md`'s "no direct
+  database edits" and "no committed credentials" rules), a new `ADMIN_EMAILS` environment variable
+  (comma-separated) is checked on register/login; a matching email is promoted to `ADMIN`
+  automatically. This keeps the repo credential-free while still letting an operator self-serve
+  admin access locally or in any deployment by setting one env var.
+- **Audit log**: a new append-only `AuditLogEntry` model (adminUserId, action, targetUserId, amount,
+  reason, createdAt) is written by the admin module for every credit adjustment and game-catalog
+  edit. No update/delete route exists for it, satisfying the "tamper-evident, never editable by the
+  admin who created them" requirement structurally rather than just by convention.
+- **Credit adjustments reuse the wallet module**: `POST /admin/players/:userId/credit-adjustments`
+  calls the same `debitWallet`/`creditWallet` functions introduced in ADR-004, in the same
+  transaction as the audit-log write — the wallet module remains the only code path that ever
+  touches `Wallet`/`LedgerEntry` rows, including for admin-initiated changes.
+
+### Alternatives considered
+- **Seeded demo admin account with a known password**: rejected — even clearly-labeled demo
+  credentials are a committed secret pattern this project has avoided everywhere else.
+- **Separate `Role`/`Permission` join tables**: rejected as unnecessary complexity for two roles
+  with no per-permission granularity requirement yet; can be introduced later without migrating
+  existing data if finer-grained permissions become necessary.
+
+### Consequences
+- Anyone who can set the `ADMIN_EMAILS` environment variable on the server can grant themselves
+  admin access by registering/logging in with that email — acceptable for this demo-stage project
+  (no real money involved) but must be revisited (e.g. an explicit invitation/approval flow) before
+  any real-money functionality is ever considered, per `COMPLIANCE_READINESS.md`.
+- Reporting (`GET /admin/reports/summary`) is computed on-demand via aggregate queries rather than
+  a materialized/cached reporting table — acceptable at current data volumes; revisit if reporting
+  queries become a performance concern.

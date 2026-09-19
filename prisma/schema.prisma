@@ -13,14 +13,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  PLAYER
+  ADMIN
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  role         Role     @default(PLAYER)
   createdAt    DateTime @default(now())
 
-  wallet       Wallet?
-  gameSessions GameSession[]
+  wallet          Wallet?
+  gameSessions    GameSession[]
+  auditLogEntries AuditLogEntry[] @relation("AdminAuditLogEntries")
 }
 
 // The Wallet module is the only part of the system allowed to create/mutate Wallet and
@@ -85,4 +92,19 @@ model GameSession {
 
   user User @relation(fields: [userId], references: [id])
   game Game @relation(fields: [gameId], references: [id])
+}
+
+// Append-only audit trail for admin actions (Task 003). Never updated or deleted — corrections
+// happen by inserting a new entry, never by editing an existing one, per AGENTS.md's quality
+// gates and trueforge/agents/admin-operations.md's "tamper-evident" requirement.
+model AuditLogEntry {
+  id           String   @id @default(cuid())
+  adminUserId  String
+  action       String // e.g. "CREDIT_ADJUSTMENT", "DEBIT_ADJUSTMENT", "GAME_UPDATED"
+  targetUserId String? // the player affected, when applicable (credit adjustments)
+  amount       Int? // the ledger amount, when applicable (credit adjustments)
+  reason       String
+  createdAt    DateTime @default(now())
+
+  adminUser User @relation("AdminAuditLogEntries", fields: [adminUserId], references: [id])
 }

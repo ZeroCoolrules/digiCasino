@@ -9,8 +9,8 @@ const router = Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 
-function serializeUser(user: { id: string; email: string; createdAt: Date }) {
-  return { id: user.id, email: user.email, createdAt: user.createdAt.toISOString() };
+function serializeUser(user: { id: string; email: string; role: string; createdAt: Date }) {
+  return { id: user.id, email: user.email, role: user.role, createdAt: user.createdAt.toISOString() };
 }
 
 function serializeWallet(wallet: { balance: number; currency: string } | null) {

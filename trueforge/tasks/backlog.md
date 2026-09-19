@@ -51,7 +51,9 @@ take precedence over the rest of the P0–P3 list below.
 - **Acceptance criteria**: the operator can manage the demo casino without editing the database
   manually.
 - **Test requirements**: admin-authorization tests, audit-log tests.
-- **Status**: READY (Task 002 dependency satisfied).
+- **Status**: IN PROGRESS (Architect stage complete: role/audit-log schema, ADMIN_EMAILS
+  promotion, and the full API contract are fixed — see ADR-005; backend/frontend implementation
+  underway).
 - **Completion notes**: —
 
 ---

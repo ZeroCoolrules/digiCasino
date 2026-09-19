@@ -23,8 +23,25 @@ if (!process.env.JWT_SECRET) {
   process.env.JWT_SECRET = DEFAULT_JWT_SECRET;
 }
 
+/**
+ * Comma-separated list of emails that are automatically promoted to the ADMIN role on
+ * registration or login (see apps/api/src/modules/auth/auth.service.ts). Demo-friendly stand-in
+ * for a real admin-invitation flow — no credentials are hardcoded anywhere in the repo; an
+ * operator just adds their own email here and registers/logs in normally.
+ */
+function parseAdminEmails(raw: string | undefined): Set<string> {
+  if (!raw) return new Set();
+  return new Set(
+    raw
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter((email) => email.length > 0),
+  );
+}
+
 export const env = {
   DATABASE_URL: process.env.DATABASE_URL,
   JWT_SECRET: process.env.JWT_SECRET,
   PORT: Number(process.env.PORT ?? DEFAULT_PORT),
+  ADMIN_EMAILS: parseAdminEmails(process.env.ADMIN_EMAILS),
 };
