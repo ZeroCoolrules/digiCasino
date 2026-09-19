@@ -360,6 +360,54 @@ export function adminGetSummary(token: string): Promise<OperationalSummary> {
   return request<OperationalSummary>('/admin/reports/summary', { method: 'GET' }, token);
 }
 
+/**
+ * Profile (Task 004) types, per SYSTEM_ARCHITECTURE.md's "Profile (Task 004)" section (ADR-006).
+ * Purely additive/read-aggregate -- no new tables on the backend.
+ */
+
+/** Lifetime play stats, computed on-demand from the user's COMPLETED GameSession rows. */
+export interface ProfileStats {
+  totalSessions: number;
+  totalWagered: number;
+  totalPayout: number;
+  netResult: number;
+}
+
+export interface ProfileResponse {
+  user: AuthUser;
+  wallet: Wallet;
+  stats: ProfileStats;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+}
+
+/** GET /profile — account info, wallet balance, and lifetime play stats. Requires auth. */
+export function getProfile(token: string): Promise<ProfileResponse> {
+  return request<ProfileResponse>('/profile', { method: 'GET' }, token);
+}
+
+/**
+ * PATCH /profile/password — changes the authenticated user's password, verifying
+ * `currentPassword` first (401 INVALID_CREDENTIALS if wrong). Requires auth.
+ */
+export function changePassword(
+  payload: ChangePasswordPayload,
+  token: string,
+): Promise<ChangePasswordResponse> {
+  return request<ChangePasswordResponse>(
+    '/profile/password',
+    { method: 'PATCH', body: JSON.stringify(payload) },
+    token,
+  );
+}
+
 export const apiClient = {
   register,
   login,
@@ -374,6 +422,8 @@ export const apiClient = {
   adminAdjustPlayerCredits,
   adminListAuditLog,
   adminGetSummary,
+  getProfile,
+  changePassword,
 };
 
 export default apiClient;

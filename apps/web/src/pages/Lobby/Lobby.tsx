@@ -57,6 +57,9 @@ export function Lobby() {
           ) : user ? (
             <>
               <span className={styles.greeting}>Signed in as {user.email}</span>
+              <Link to="/profile">
+                <Button variant="secondary">Profile</Button>
+              </Link>
               <Link to="/transactions">
                 <Button variant="secondary">Transaction history</Button>
               </Link>
