@@ -6,6 +6,7 @@ import { Register } from './pages/Register/Register';
 import { Game } from './pages/Game/Game';
 import { Transactions } from './pages/Transactions/Transactions';
 import { AdminDashboard } from './pages/Admin/AdminDashboard';
+import { Profile } from './pages/Profile/Profile';
 import { RouterProvider, useRouter } from './router/Router';
 
 const GAME_ROUTE_PREFIX = '/games/';
@@ -29,6 +30,8 @@ function Routes() {
       return <Transactions />;
     case '/admin':
       return <AdminDashboard />;
+    case '/profile':
+      return <Profile />;
     case '/':
     default:
       return <Landing />;
