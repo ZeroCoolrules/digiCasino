@@ -5,16 +5,17 @@
   "description": "digiCasino backend API (Task 001 — Foundation): health, auth, and the minimal wallet module.",
   "main": "dist/index.js",
   "scripts": {
-    "predev": "npm run prisma:generate --silent && DATABASE_URL=\"file:./dev.db\" prisma migrate deploy --schema=../../prisma/schema.prisma",
+    "predev": "npm run prisma:generate --silent && DATABASE_URL=\"file:./dev.db\" prisma migrate deploy --schema=../../prisma/schema.prisma && DATABASE_URL=\"file:./dev.db\" npm run db:seed --silent",
     "dev": "tsx watch src/index.ts",
     "prebuild": "npm run prisma:generate --silent",
     "build": "tsc -p tsconfig.json",
-    "prestart": "DATABASE_URL=\"file:./dev.db\" prisma migrate deploy --schema=../../prisma/schema.prisma",
+    "prestart": "DATABASE_URL=\"file:./dev.db\" prisma migrate deploy --schema=../../prisma/schema.prisma && DATABASE_URL=\"file:./dev.db\" npm run db:seed --silent",
     "start": "node dist/index.js",
     "lint": "tsc -p tsconfig.json --noEmit",
     "prisma:generate": "DATABASE_URL=\"file:./dev.db\" prisma generate --schema=../../prisma/schema.prisma",
     "prisma:migrate": "DATABASE_URL=\"file:./dev.db\" prisma migrate dev --schema=../../prisma/schema.prisma",
-    "pretest": "npm run prisma:generate --silent && DATABASE_URL=\"file:./test.db\" prisma migrate deploy --schema=../../prisma/schema.prisma",
+    "db:seed": "tsx ../../prisma/seed.ts",
+    "pretest": "npm run prisma:generate --silent && DATABASE_URL=\"file:./test.db\" prisma migrate deploy --schema=../../prisma/schema.prisma && DATABASE_URL=\"file:./test.db\" npm run db:seed --silent",
     "test": "DATABASE_URL=\"file:./test.db\" vitest run"
   },
   "dependencies": {

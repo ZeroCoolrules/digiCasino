@@ -82,6 +82,56 @@ export interface LoginPayload {
   password: string;
 }
 
+/** A catalog entry, as returned by GET /games. */
+export interface Game {
+  slug: string;
+  name: string;
+  description: string;
+  minBet: number;
+  maxBet: number;
+}
+
+export interface ListGamesResponse {
+  games: Game[];
+}
+
+/** The server-side spin outcome, once a session has been played. */
+export interface SpinResult {
+  reels: string[];
+  payout: number;
+}
+
+export interface GameSession {
+  id: string;
+  gameId: string;
+  status: 'PENDING' | 'COMPLETED';
+  bet: number;
+  payout: number | null;
+  result: SpinResult | null;
+}
+
+export interface StartSessionResponse {
+  session: GameSession;
+}
+
+export interface PlaySessionResponse {
+  session: GameSession;
+  wallet: Wallet;
+}
+
+/** A single ledger entry, as returned by GET /wallet/transactions. */
+export interface Transaction {
+  id: string;
+  type: 'CREDIT' | 'DEBIT';
+  amount: number;
+  reason: string;
+  createdAt: string;
+}
+
+export interface ListTransactionsResponse {
+  transactions: Transaction[];
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -134,10 +184,45 @@ export function me(token: string): Promise<MeResponse> {
   return request<MeResponse>('/auth/me', { method: 'GET' }, token);
 }
 
+/** GET /games — the active game catalog. No auth required. */
+export function listGames(): Promise<ListGamesResponse> {
+  return request<ListGamesResponse>('/games', { method: 'GET' });
+}
+
+/**
+ * POST /games/:slug/sessions — starts a new session, immediately debiting `bet` from the
+ * player's wallet. Returns the PENDING session; call `playGameSession` next to resolve it.
+ */
+export function startGameSession(slug: string, bet: number, token: string): Promise<StartSessionResponse> {
+  return request<StartSessionResponse>(
+    `/games/${slug}/sessions`,
+    { method: 'POST', body: JSON.stringify({ bet }) },
+    token,
+  );
+}
+
+/**
+ * POST /games/sessions/:id/play — resolves a PENDING session server-side and returns the
+ * outcome plus the updated wallet balance. Calling this twice for the same session returns a
+ * 409 ApiError (code SESSION_ALREADY_SETTLED) on the second call.
+ */
+export function playGameSession(sessionId: string, token: string): Promise<PlaySessionResponse> {
+  return request<PlaySessionResponse>(`/games/sessions/${sessionId}/play`, { method: 'POST' }, token);
+}
+
+/** GET /wallet/transactions — the authenticated user's ledger entries, newest first. */
+export function listTransactions(token: string): Promise<ListTransactionsResponse> {
+  return request<ListTransactionsResponse>('/wallet/transactions', { method: 'GET' }, token);
+}
+
 export const apiClient = {
   register,
   login,
   me,
+  listGames,
+  startGameSession,
+  playGameSession,
+  listTransactions,
 };
 
 export default apiClient;

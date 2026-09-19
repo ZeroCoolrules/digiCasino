@@ -20,6 +20,8 @@ export interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  /** Updates the locally-held wallet balance, e.g. after a game session settles. */
+  setWallet: (wallet: Wallet) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -123,8 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, wallet, token, isLoading, login, register, logout }),
-    [user, wallet, token, isLoading, login, register, logout],
+    () => ({ user, wallet, token, isLoading, login, register, logout, setWallet }),
+    [user, wallet, token, isLoading, login, register, logout, setWallet],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

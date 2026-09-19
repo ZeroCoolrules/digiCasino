@@ -37,13 +37,17 @@ packages/
 - Frontend, backend, game logic, and wallet/ledger code stay in clearly separated directories, per
   `AGENTS.md`.
 
-## Core schema (Task 001 — minimal, extended in Task 002)
+## Core schema (Task 001 foundation + Task 002 additions)
 - `User` — id, email, passwordHash, createdAt.
 - `Wallet` — id, userId (1:1 with User), balance (demo credits), currency label (e.g. "DEMO").
 - `LedgerEntry` — id, walletId, type (CREDIT/DEBIT), amount, reason, createdAt. Append-only; the
   wallet balance is derived/reconciled from ledger entries, not mutated independently.
-- `GameSession` — id, userId, gameId, status, createdAt (schema stub for Task 002; not populated
-  with real game logic in Task 001).
+- `Game` (Task 002) — id, slug (unique), name, description, minBet, maxBet, isActive. The catalog
+  shown in the lobby; seeded via `prisma/seed.ts`.
+- `GameSession` (Task 002) — id, userId, gameId, status (`PENDING`→`COMPLETED`), bet, payout
+  (null until settled), result (JSON string, null until settled), createdAt, settledAt. Settlement
+  (bet debit + payout credit) happens through the wallet module only, inside a single transaction
+  per session, guarded so a session can only be settled once.
 
 ## API conventions
 - Base path: `/api/v1`.
@@ -51,6 +55,16 @@ packages/
 - Auth: `POST /api/v1/auth/register`, `POST /api/v1/auth/login` (returns JWT), `GET /api/v1/auth/me`
   (requires `Authorization: Bearer <token>`).
 - Health: `GET /api/v1/health` → `{ "status": "ok" }`.
+- Games (Task 002):
+  - `GET /api/v1/games` → `{ "games": [{ "slug", "name", "description", "minBet", "maxBet" }] }`
+    (active games only, no auth required).
+  - `POST /api/v1/games/:slug/sessions` (auth) body `{ "bet": number }` →
+    `201 { "session": { "id", "gameId", "status": "PENDING", "bet" } }`. Debits the bet immediately.
+  - `POST /api/v1/games/sessions/:id/play` (auth, must own the session) →
+    `200 { "session": { "id", "status": "COMPLETED", "bet", "payout", "result" }, "wallet": { "balance", "currency" } }`.
+    `409 SESSION_ALREADY_SETTLED` if called more than once for the same session.
+  - `GET /api/v1/wallet/transactions` (auth) →
+    `{ "transactions": [{ "id", "type", "amount", "reason", "createdAt" }] }`, newest first.
 - All routes that touch a user's wallet or ledger must go through the wallet service layer, never
   through direct Prisma calls from route handlers.
 
