@@ -6,6 +6,7 @@ import authRoutes from "./modules/auth/auth.routes";
 import healthRoutes from "./modules/health/health.routes";
 import gameRoutes from "./modules/game/game.routes";
 import walletRoutes from "./modules/wallet/wallet.routes";
+import adminRoutes from "./modules/admin/admin.routes";
 
 const API_BASE_PATH = "/api/v1";
 
@@ -18,6 +19,7 @@ export function createApp(): Express {
   app.use(`${API_BASE_PATH}/auth`, authRoutes);
   app.use(`${API_BASE_PATH}/games`, gameRoutes);
   app.use(`${API_BASE_PATH}/wallet`, walletRoutes);
+  app.use(`${API_BASE_PATH}/admin`, adminRoutes);
 
   app.use((_req: Request, _res: Response, next: NextFunction) => {
     next(new ApiError(404, "NOT_FOUND", "The requested route does not exist."));
