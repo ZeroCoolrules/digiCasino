@@ -60,6 +60,11 @@ export function Lobby() {
               <Link to="/transactions">
                 <Button variant="secondary">Transaction history</Button>
               </Link>
+              {user.role === 'ADMIN' ? (
+                <Link to="/admin">
+                  <Button variant="secondary">Admin dashboard</Button>
+                </Link>
+              ) : null}
               <Button variant="secondary" onClick={logout}>
                 Log out
               </Button>

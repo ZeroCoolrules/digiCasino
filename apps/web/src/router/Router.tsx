@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 
-export type Route = '/' | '/lobby' | '/login' | '/register' | '/transactions' | `/games/${string}`;
+export type Route = '/' | '/lobby' | '/login' | '/register' | '/transactions' | '/admin' | `/games/${string}`;
 
 interface RouterContextValue {
   path: string;
