@@ -19,13 +19,13 @@ Last updated: TrueForge bootstrap (Task 001 — Foundation)
 - **Environment variables**: none existed. `.env.example` is being added at the repo root.
 
 ## Current phase
-**Task 001 — Foundation**, **Task 002 — Demo Casino Vertical Slice**, and **Task 003 — Admin +
-Casino Operations** are all COMPLETED: the app runs locally (`npm install && npm test` at the
-repo root), users can register/log in, browse a real (DB-backed) game catalog, play the Demo
-Slots game with a server-authoritative outcome, view their transaction history, and (for accounts
-listed in `ADMIN_EMAILS`) manage the game catalog, adjust player credits with a full audit trail,
-and view operational reporting via `/admin`. See `AGENT_TASKS.md` and `trueforge/tasks/backlog.md`
-for remaining backlog items (P1 "Player profile", P2 expansion, P3 production readiness).
+**Tasks 001–004** are all COMPLETED: the app runs locally (`npm install && npm test` at the repo
+root), users can register/log in, browse a real (DB-backed) game catalog, play the Demo Slots game
+with a server-authoritative outcome, view their transaction history, view their profile (account
+info, balance, lifetime play stats) and change their password, and (for accounts listed in
+`ADMIN_EMAILS`) manage the game catalog, adjust player credits with a full audit trail, and view
+operational reporting via `/admin`. Every P1 "First Working Casino" backlog item is done. See
+`AGENT_TASKS.md` and `trueforge/tasks/backlog.md` for remaining P2/P3 backlog items.
 
 ## Branching
 - `main` — stable branch, pushed to `origin` (github.com/ZeroCoolrules/digiCasino).
