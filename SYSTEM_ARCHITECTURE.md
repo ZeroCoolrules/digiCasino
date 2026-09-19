@@ -37,8 +37,8 @@ packages/
 - Frontend, backend, game logic, and wallet/ledger code stay in clearly separated directories, per
   `AGENTS.md`.
 
-## Core schema (Task 001 foundation + Task 002 additions)
-- `User` — id, email, passwordHash, createdAt.
+## Core schema (Task 001 foundation + Task 002/003 additions)
+- `User` — id, email, passwordHash, role (`PLAYER`|`ADMIN`, default `PLAYER`, Task 003), createdAt.
 - `Wallet` — id, userId (1:1 with User), balance (demo credits), currency label (e.g. "DEMO").
 - `LedgerEntry` — id, walletId, type (CREDIT/DEBIT), amount, reason, createdAt. Append-only; the
   wallet balance is derived/reconciled from ledger entries, not mutated independently.
@@ -48,6 +48,9 @@ packages/
   (null until settled), result (JSON string, null until settled), createdAt, settledAt. Settlement
   (bet debit + payout credit) happens through the wallet module only, inside a single transaction
   per session, guarded so a session can only be settled once.
+- `AuditLogEntry` (Task 003) — id, adminUserId, action (e.g. `CREDIT_ADJUSTMENT`, `GAME_UPDATED`),
+  targetUserId (nullable), amount (nullable), reason, createdAt. Append-only; written only by the
+  admin module, never updated/deleted (see ADR-005).
 
 ## API conventions
 - Base path: `/api/v1`.
@@ -65,6 +68,25 @@ packages/
     `409 SESSION_ALREADY_SETTLED` if called more than once for the same session.
   - `GET /api/v1/wallet/transactions` (auth) →
     `{ "transactions": [{ "id", "type", "amount", "reason", "createdAt" }] }`, newest first.
+- Admin (Task 003) — all routes require `Authorization: Bearer <token>` for a user whose `role`
+  is `ADMIN` (`403 FORBIDDEN` otherwise). Any user whose email is listed in the `ADMIN_EMAILS`
+  environment variable is auto-promoted to `ADMIN` on register/login — see
+  `apps/api/src/modules/auth/auth.service.ts` and `.env.example`.
+  - `GET /api/v1/admin/games` → `{ "games": [{ "id", "slug", "name", "description", "minBet", "maxBet", "isActive" }] }`
+    (all games, including inactive — unlike the public `GET /games`).
+  - `PATCH /api/v1/admin/games/:slug` body (all fields optional) `{ "name"?, "description"?, "minBet"?, "maxBet"?, "isActive"? }`
+    → `200 { "game": {...} }`. Writes an `AuditLogEntry` (`action: "GAME_UPDATED"`). `404 GAME_NOT_FOUND` for an unknown slug.
+  - `GET /api/v1/admin/players` → `{ "players": [{ "id", "email", "role", "createdAt", "wallet": { "balance", "currency" } }] }`.
+  - `POST /api/v1/admin/players/:userId/credit-adjustments` body `{ "type": "CREDIT"|"DEBIT", "amount": number, "reason": string }`
+    → `201 { "wallet": { "balance", "currency" }, "auditLogEntry": { "id", "action", "targetUserId", "amount", "reason", "createdAt" } }`.
+    Adjustments are applied via the wallet module's `debitWallet`/`creditWallet` (never direct Prisma writes) and audit-logged in the
+    same transaction. `400 VALIDATION_ERROR` for a non-positive amount or invalid `type`; `400 INSUFFICIENT_BALANCE` if a `DEBIT`
+    would take the player's balance negative; `404 USER_NOT_FOUND` for an unknown player.
+  - `GET /api/v1/admin/audit-log` → `{ "entries": [{ "id", "adminUserId", "adminEmail", "action", "targetUserId", "targetEmail", "amount", "reason", "createdAt" }] }`,
+    newest first. Read-only — no update/delete route exists for audit entries.
+  - `GET /api/v1/admin/reports/summary` →
+    `{ "playerCount", "activeGameCount", "totalGameCount", "sessionCount", "completedSessionCount", "ledgerEntryCount", "totalCreditsInCirculation" }`
+    (basic operational reporting per `trueforge/agents/admin-operations.md`).
 - All routes that touch a user's wallet or ledger must go through the wallet service layer, never
   through direct Prisma calls from route handlers.
 
