@@ -163,3 +163,42 @@ without introducing real-money payment processing (explicitly out of scope per `
 - Reporting (`GET /admin/reports/summary`) is computed on-demand via aggregate queries rather than
   a materialized/cached reporting table — acceptable at current data volumes; revisit if reporting
   queries become a performance concern.
+
+## ADR-006: Player profile design for Task 004
+**Status**: Accepted
+**Date**: Task 004 — Player Profile
+
+### Context
+The P1 backlog carried a leftover "Player profile" item: players had a wallet and transaction
+history (Task 002) but no dedicated profile view, and no way to change their password after
+registration.
+
+### Decision
+- **No new tables.** Every field a profile needs already exists on `User`/`Wallet`/`GameSession`.
+  `GET /api/v1/profile` is a pure read/aggregate endpoint: account info from `User`, balance from
+  `Wallet`, and lifetime play stats (`totalSessions`, `totalWagered`, `totalPayout`, `netResult`)
+  computed on-demand from the user's `COMPLETED` `GameSession` rows. This mirrors ADR-005's
+  "compute reporting on-demand" choice for the same reason: simplicity at current data volumes.
+- **Password change** (`PATCH /api/v1/profile/password`) reuses the exact bcrypt compare/hash
+  pattern already used by `auth.service.ts`'s `loginUser`/`registerUser`, requiring the current
+  password before accepting a new one — standard practice, and keeps the auth module as the only
+  place that ever reads/writes `passwordHash`.
+- **Ownership**: a new `apps/api/src/modules/profile/` module (backend) and
+  `apps/web/src/pages/Profile/` (frontend), kept separate from `auth`/`wallet`/`game`/`admin` per
+  `AGENTS.md`'s module-separation rule, even though it reads from all three.
+
+### Alternatives considered
+- **Folding this into `GET /auth/me`**: rejected — `/auth/me` is a lightweight session-check
+  endpoint used on every page load (via `AuthContext`); adding aggregate `GameSession` queries to
+  it would make every app load pay that cost. A separate `/profile` endpoint is only called when
+  the player actually visits the profile page.
+- **A dedicated `PlayerStats` table updated incrementally on each settlement**: rejected as
+  premature optimization; revisit only if on-demand aggregation becomes a measured performance
+  problem.
+
+### Consequences
+- Adding more profile fields or stats later (e.g. favorite game, win streak) means extending the
+  aggregate query, not a schema migration, as long as the underlying data already exists elsewhere.
+- Password-change intentionally does not invalidate other active JWTs (no server-side token
+  revocation list exists yet) — acceptable for this demo-stage project; revisit under P3 security
+  hardening if this becomes a real concern.

@@ -57,6 +57,23 @@ take precedence over the rest of the P0–P3 list below.
   successfully with no contract drift). Merged into `feat/task-003-admin-operations`, full test
   suite green (60 tests), live end-to-end smoke test passed against a real running server.
 
+## Task 004 — Player Profile
+- **Priority**: P1 (the last remaining P1 "First Working Casino" item)
+- **Owner**: Architect → Backend + Frontend → Orchestrator.
+- **Description**: A dedicated player profile page showing account info, wallet balance, and
+  lifetime play stats (sessions played, total wagered, total payout, net result), plus a
+  password-change form.
+- **Dependencies**: Task 001 (auth/wallet) and Task 002 (GameSession data) completed.
+- **Files expected to change**: `apps/api/src/modules/profile/**`,
+  `apps/web/src/pages/Profile/**`. No schema changes — see ADR-006.
+- **Acceptance criteria**: a logged-in user can view their profile (account info, balance, play
+  stats) and change their password.
+- **Test requirements**: profile-stats aggregation tests, password-change tests (including wrong
+  current-password rejection), frontend smoke tests for the profile page.
+- **Status**: IN PROGRESS (Architect stage complete: full API contract fixed, no schema changes
+  needed — see ADR-006; backend/frontend implementation underway).
+- **Completion notes**: —
+
 ---
 
 ## Remaining P0 — Foundation (folded into Task 001, tracked individually for granularity)
@@ -74,7 +91,7 @@ take precedence over the rest of the P0–P3 list below.
 - Casino landing page — COMPLETED (Task 001)
 - Casino lobby — COMPLETED (Task 002, DB-backed catalog)
 - Game catalog — COMPLETED (Task 002)
-- Player profile — BACKLOG (only auth/wallet exist so far, no dedicated profile page)
+- Player profile — IN PROGRESS (Task 004)
 - Demo wallet — COMPLETED (Task 001/002)
 - Transaction ledger — COMPLETED (Task 002)
 - One playable demo game — COMPLETED (Task 002, Demo Slots)
