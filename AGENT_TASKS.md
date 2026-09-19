@@ -29,8 +29,11 @@ A task is never marked `COMPLETED` merely because code was written — see
   (both completed successfully, no contract drift). Full test suite green (API 38/38, Web 22/22);
   lint, build, and a live end-to-end smoke test all passed.
 
-All three vertical-slice tasks (001–003) are now complete. Remaining work is P1's leftover
-"Player profile" item plus the P2/P3 backlog in `trueforge/tasks/backlog.md`.
+- **Task 004 — Player Profile**: IN PROGRESS. Architect stage complete (full API contract fixed,
+  no schema changes needed — see ADR-006); backend/frontend implementation underway.
+
+All three vertical-slice tasks (001–003) are complete; Task 004 (the last P1 item) is in progress.
+Remaining work after Task 004 is the P2/P3 backlog in `trueforge/tasks/backlog.md`.
 
 ## Agent roles
 See `trueforge/agents/*.md` for the full definition of each role (mission, responsibilities, owned

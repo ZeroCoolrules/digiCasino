@@ -87,6 +87,17 @@ packages/
   - `GET /api/v1/admin/reports/summary` →
     `{ "playerCount", "activeGameCount", "totalGameCount", "sessionCount", "completedSessionCount", "ledgerEntryCount", "totalCreditsInCirculation" }`
     (basic operational reporting per `trueforge/agents/admin-operations.md`).
+- Profile (Task 004) — purely additive; no new tables, only aggregates over existing data:
+  - `GET /api/v1/profile` (auth) →
+    `200 { "user": { "id", "email", "role", "createdAt" }, "wallet": { "balance", "currency" }, "stats": { "totalSessions", "totalWagered", "totalPayout", "netResult" } }`.
+    `stats` are computed on-demand from the user's `COMPLETED` `GameSession` rows (`totalSessions`
+    = count, `totalWagered` = sum of `bet`, `totalPayout` = sum of `payout`, `netResult` =
+    `totalPayout - totalWagered`).
+  - `PATCH /api/v1/profile/password` (auth) body `{ "currentPassword": string, "newPassword": string (min 8 chars) }`
+    → `200 { "success": true }`. Verifies `currentPassword` against the stored hash (bcrypt,
+    same as login) before re-hashing and storing `newPassword`. `400 VALIDATION_ERROR` if
+    `newPassword` is too short or missing; `401 INVALID_CREDENTIALS` if `currentPassword` is wrong.
+    Does not touch `Wallet`/`LedgerEntry` — unrelated to the wallet module's concerns.
 - All routes that touch a user's wallet or ledger must go through the wallet service layer, never
   through direct Prisma calls from route handlers.
 
