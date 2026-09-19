@@ -70,9 +70,11 @@ take precedence over the rest of the P0–P3 list below.
   stats) and change their password.
 - **Test requirements**: profile-stats aggregation tests, password-change tests (including wrong
   current-password rejection), frontend smoke tests for the profile page.
-- **Status**: IN PROGRESS (Architect stage complete: full API contract fixed, no schema changes
-  needed — see ADR-006; backend/frontend implementation underway).
-- **Completion notes**: —
+- **Status**: COMPLETED (see `trueforge/tasks/completed.md`).
+- **Completion notes**: Architect stage (schema/contract) by the orchestrator; backend and
+  frontend each implemented by a dedicated child agent in parallel worktrees (both completed
+  successfully with no contract drift). Merged into `feat/task-004-player-profile`, full test
+  suite green (72 tests), live end-to-end smoke test passed against a real running server.
 
 ---
 
@@ -91,7 +93,7 @@ take precedence over the rest of the P0–P3 list below.
 - Casino landing page — COMPLETED (Task 001)
 - Casino lobby — COMPLETED (Task 002, DB-backed catalog)
 - Game catalog — COMPLETED (Task 002)
-- Player profile — IN PROGRESS (Task 004)
+- Player profile — COMPLETED (Task 004)
 - Demo wallet — COMPLETED (Task 001/002)
 - Transaction ledger — COMPLETED (Task 002)
 - One playable demo game — COMPLETED (Task 002, Demo Slots)
