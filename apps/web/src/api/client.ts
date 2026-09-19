@@ -43,6 +43,7 @@ export class ApiError extends Error {
 export interface AuthUser {
   id: string;
   email: string;
+  role: 'PLAYER' | 'ADMIN';
   createdAt: string;
 }
 
@@ -132,6 +133,101 @@ export interface ListTransactionsResponse {
   transactions: Transaction[];
 }
 
+/**
+ * Admin (Task 003) types, per SYSTEM_ARCHITECTURE.md's "Admin (Task 003)" section (ADR-005).
+ * All admin routes require an ADMIN-role user's token; the backend enforces this server-side
+ * (403 FORBIDDEN otherwise) -- the frontend's role check is a UX nicety only.
+ */
+
+/** A game as returned by the admin catalog endpoints (includes inactive games and `isActive`). */
+export interface AdminGame {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  minBet: number;
+  maxBet: number;
+  isActive: boolean;
+}
+
+export interface ListAdminGamesResponse {
+  games: AdminGame[];
+}
+
+/** All fields optional -- only the provided fields are updated. */
+export interface AdminGamePatch {
+  name?: string;
+  description?: string;
+  minBet?: number;
+  maxBet?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateAdminGameResponse {
+  game: AdminGame;
+}
+
+export interface AdminPlayer {
+  id: string;
+  email: string;
+  role: 'PLAYER' | 'ADMIN';
+  createdAt: string;
+  wallet: Wallet;
+}
+
+export interface ListAdminPlayersResponse {
+  players: AdminPlayer[];
+}
+
+export interface CreditAdjustmentPayload {
+  type: 'CREDIT' | 'DEBIT';
+  amount: number;
+  reason: string;
+}
+
+/** The audit-log entry echoed back by the credit-adjustment endpoint itself. */
+export interface CreditAdjustmentAuditEntry {
+  id: string;
+  action: string;
+  targetUserId: string;
+  amount: number;
+  reason: string;
+  createdAt: string;
+}
+
+export interface CreditAdjustmentResponse {
+  wallet: Wallet;
+  auditLogEntry: CreditAdjustmentAuditEntry;
+}
+
+/** A full audit-log entry, as returned by GET /admin/audit-log (append-only, never edited). */
+export interface AuditLogEntry {
+  id: string;
+  adminUserId: string;
+  adminEmail: string;
+  action: string;
+  targetUserId: string | null;
+  targetEmail: string | null;
+  amount: number | null;
+  reason: string;
+  createdAt: string;
+}
+
+export interface ListAuditLogResponse {
+  entries: AuditLogEntry[];
+}
+
+/** GET /admin/reports/summary — returned as flat fields, not wrapped in an envelope key. */
+export interface OperationalSummary {
+  playerCount: number;
+  activeGameCount: number;
+  totalGameCount: number;
+  sessionCount: number;
+  completedSessionCount: number;
+  ledgerEntryCount: number;
+  totalCreditsInCirculation: number;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -215,6 +311,55 @@ export function listTransactions(token: string): Promise<ListTransactionsRespons
   return request<ListTransactionsResponse>('/wallet/transactions', { method: 'GET' }, token);
 }
 
+/** GET /admin/games — the full game catalog, including inactive games. Requires an ADMIN token. */
+export function adminListGames(token: string): Promise<ListAdminGamesResponse> {
+  return request<ListAdminGamesResponse>('/admin/games', { method: 'GET' }, token);
+}
+
+/** PATCH /admin/games/:slug — updates one or more fields of a game. Requires an ADMIN token. */
+export function adminUpdateGame(
+  slug: string,
+  patch: AdminGamePatch,
+  token: string,
+): Promise<UpdateAdminGameResponse> {
+  return request<UpdateAdminGameResponse>(
+    `/admin/games/${slug}`,
+    { method: 'PATCH', body: JSON.stringify(patch) },
+    token,
+  );
+}
+
+/** GET /admin/players — every registered player and their wallet. Requires an ADMIN token. */
+export function adminListPlayers(token: string): Promise<ListAdminPlayersResponse> {
+  return request<ListAdminPlayersResponse>('/admin/players', { method: 'GET' }, token);
+}
+
+/**
+ * POST /admin/players/:userId/credit-adjustments — applies an audited demo-credit adjustment
+ * via the wallet module. Requires an ADMIN token.
+ */
+export function adminAdjustPlayerCredits(
+  userId: string,
+  payload: CreditAdjustmentPayload,
+  token: string,
+): Promise<CreditAdjustmentResponse> {
+  return request<CreditAdjustmentResponse>(
+    `/admin/players/${userId}/credit-adjustments`,
+    { method: 'POST', body: JSON.stringify(payload) },
+    token,
+  );
+}
+
+/** GET /admin/audit-log — every audit-log entry, newest first. Requires an ADMIN token. */
+export function adminListAuditLog(token: string): Promise<ListAuditLogResponse> {
+  return request<ListAuditLogResponse>('/admin/audit-log', { method: 'GET' }, token);
+}
+
+/** GET /admin/reports/summary — basic operational reporting counts. Requires an ADMIN token. */
+export function adminGetSummary(token: string): Promise<OperationalSummary> {
+  return request<OperationalSummary>('/admin/reports/summary', { method: 'GET' }, token);
+}
+
 export const apiClient = {
   register,
   login,
@@ -223,6 +368,12 @@ export const apiClient = {
   startGameSession,
   playGameSession,
   listTransactions,
+  adminListGames,
+  adminUpdateGame,
+  adminListPlayers,
+  adminAdjustPlayerCredits,
+  adminListAuditLog,
+  adminGetSummary,
 };
 
 export default apiClient;
