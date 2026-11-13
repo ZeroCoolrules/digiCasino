@@ -1,0 +1,97 @@
+// digiCasino — production Prisma schema (Postgres). Mirrors prisma/schema.prisma (SQLite,
+// used for local dev/test) with the datasource switched to postgresql for deployment.
+// Keep models in sync with prisma/schema.prisma when either changes.
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLAYER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(PLAYER)
+  createdAt    DateTime @default(now())
+
+  wallet          Wallet?
+  gameSessions    GameSession[]
+  auditLogEntries AuditLogEntry[] @relation("AdminAuditLogEntries")
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Int      @default(1000)
+  currency  String   @default("DEMO")
+  createdAt DateTime @default(now())
+
+  user          User          @relation(fields: [userId], references: [id])
+  ledgerEntries LedgerEntry[]
+}
+
+enum LedgerEntryType {
+  CREDIT
+  DEBIT
+}
+
+model LedgerEntry {
+  id        String          @id @default(cuid())
+  walletId  String
+  type      LedgerEntryType
+  amount    Int
+  reason    String
+  createdAt DateTime        @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+}
+
+model Game {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  minBet      Int
+  maxBet      Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  sessions GameSession[]
+}
+
+model GameSession {
+  id         String    @id @default(cuid())
+  userId     String
+  gameId     String
+  status     String    @default("PENDING")
+  bet        Int
+  payout     Int?
+  result     String?
+  createdAt  DateTime  @default(now())
+  settledAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+}
+
+model AuditLogEntry {
+  id           String   @id @default(cuid())
+  adminUserId  String
+  action       String
+  targetUserId String?
+  amount       Int?
+  reason       String
+  createdAt    DateTime @default(now())
+
+  adminUser User @relation("AdminAuditLogEntries", fields: [adminUserId], references: [id])
+}
