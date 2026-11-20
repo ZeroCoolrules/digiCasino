@@ -13,6 +13,7 @@ function serializeGame(game: Game) {
     description: game.description,
     minBet: game.minBet,
     maxBet: game.maxBet,
+    gameType: (game as unknown as { gameType: string }).gameType ?? "slots",
   };
 }
 
@@ -38,13 +39,15 @@ router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
 });
 
 // POST /api/v1/games/:slug/sessions — start a new session, debiting the bet.
+// Body: { bet: number, move?: unknown }
+// `move` is required for dice-roll (target + direction) and high-low (direction).
 router.post("/:slug/sessions", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId as string;
     const { slug } = req.params;
-    const { bet } = (req.body ?? {}) as { bet?: unknown };
+    const { bet, move } = (req.body ?? {}) as { bet?: unknown; move?: unknown };
 
-    const session = await startGameSession(userId, slug, bet);
+    const session = await startGameSession(userId, slug, bet, move);
     res.status(201).json({ session: serializeSession(session) });
   } catch (err) {
     next(err);

@@ -4,6 +4,8 @@ import { Lobby } from './pages/Lobby/Lobby';
 import { Login } from './pages/Login/Login';
 import { Register } from './pages/Register/Register';
 import { Game } from './pages/Game/Game';
+import { DiceRoll } from './pages/DiceRoll/DiceRoll';
+import { HighLow } from './pages/HighLow/HighLow';
 import { Transactions } from './pages/Transactions/Transactions';
 import { AdminDashboard } from './pages/Admin/AdminDashboard';
 import { Profile } from './pages/Profile/Profile';
@@ -16,6 +18,10 @@ function Routes() {
 
   if (path.startsWith(GAME_ROUTE_PREFIX)) {
     const slug = path.slice(GAME_ROUTE_PREFIX.length);
+
+    // Dedicated pages for the new games; fall back to the generic Game page for slots.
+    if (slug === 'dice-roll') return <DiceRoll />;
+    if (slug === 'high-low') return <HighLow />;
     return <Game slug={slug} />;
   }
 

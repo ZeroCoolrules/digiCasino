@@ -64,7 +64,10 @@ export function Game({ slug }: GameProps) {
       const started = await apiClient.startGameSession(game.slug, bet, token);
       const played = await apiClient.playGameSession(started.session.id, token);
 
-      setOutcome({ payout: played.session.payout ?? 0, result: played.session.result });
+      // This page is only routed to for the slots game (App.tsx sends dice-roll and
+      // high-low to their own dedicated pages), so result is always a SpinResult here.
+      // GameSession.result is typed as a union across all game engines; narrow it.
+      setOutcome({ payout: played.session.payout ?? 0, result: played.session.result as SpinResult | null });
       setWallet(played.wallet);
     } catch (err) {
       setSpinError(err instanceof Error ? err.message : 'Spin failed.');

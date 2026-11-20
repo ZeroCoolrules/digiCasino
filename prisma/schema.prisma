@@ -1,4 +1,4 @@
-// digiCasino — Prisma schema (Task 001: Foundation)
+// digiCasino — Prisma schema
 // SQLite for local/dev. DATABASE_URL is read from the environment (see .env.example).
 // NOTE: Pinned to Prisma ORM 6.x (classic schema-based datasource config) rather than 7.x,
 // which requires a prisma.config.ts + mandatory driver adapters. That added complexity is not
@@ -62,7 +62,11 @@ model LedgerEntry {
   wallet Wallet @relation(fields: [walletId], references: [id])
 }
 
-// Game catalog (Task 002). One row per playable demo game.
+// Game catalog. One row per playable demo game.
+// gameType discriminates the server-side engine:
+//   "slots"     — 3-reel slot machine (ADR-004)
+//   "dice-roll" — Dice Roll (bob/digicasino-games)
+//   "high-low"  — High-Low Cards (bob/digicasino-games)
 model Game {
   id          String   @id @default(cuid())
   slug        String   @unique
@@ -71,6 +75,7 @@ model Game {
   minBet      Int
   maxBet      Int
   isActive    Boolean  @default(true)
+  gameType    String   @default("slots")
   createdAt   DateTime @default(now())
 
   sessions GameSession[]
@@ -78,13 +83,15 @@ model Game {
 
 // A single play of a game. Settlement (bet debit + payout credit) happens through the wallet
 // module only — see apps/api/src/modules/wallet. `result` is a JSON string describing exactly
-// what the server-side RNG produced, kept for auditability.
+// what the server-side RNG produced, kept for auditability. `move` is the player's pre-bet
+// choice (JSON string), required for dice-roll and high-low games.
 model GameSession {
   id         String    @id @default(cuid())
   userId     String
   gameId     String
   status     String    @default("PENDING") // PENDING -> COMPLETED
   bet        Int
+  move       String? // JSON string of player's pre-bet choice; null for slots
   payout     Int? // null until settled
   result     String? // JSON string, null until settled
   createdAt  DateTime  @default(now())
