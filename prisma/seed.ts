@@ -13,6 +13,30 @@ const GAMES = [
     minBet: 10,
     maxBet: 100,
     isActive: true,
+    gameType: "slots",
+  },
+  {
+    slug: "dice-roll",
+    name: "Dice Roll",
+    description:
+      "Roll two dice and bet on the total. Choose a target (2–11) and pick UNDER or OVER. " +
+      "Exact match loses. Win pays 1.9× your bet. Virtual credits only.",
+    minBet: 10,
+    maxBet: 500,
+    isActive: true,
+    gameType: "dice-roll",
+  },
+  {
+    slug: "high-low",
+    name: "High-Low Cards",
+    description:
+      "A card is revealed — guess whether the next card is HIGHER or LOWER (Ace=1, King=13). " +
+      "Tie rule: equal cards are a PUSH and your bet is returned. Win pays 1.9× your bet. " +
+      "Virtual credits only.",
+    minBet: 10,
+    maxBet: 500,
+    isActive: true,
+    gameType: "high-low",
   },
 ];
 

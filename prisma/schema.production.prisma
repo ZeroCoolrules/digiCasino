@@ -64,6 +64,7 @@ model Game {
   minBet      Int
   maxBet      Int
   isActive    Boolean  @default(true)
+  gameType    String   @default("slots")
   createdAt   DateTime @default(now())
 
   sessions GameSession[]
@@ -75,6 +76,7 @@ model GameSession {
   gameId     String
   status     String    @default("PENDING")
   bet        Int
+  move       String?
   payout     Int?
   result     String?
   createdAt  DateTime  @default(now())
